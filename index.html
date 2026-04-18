@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InterviewIQ — Post-Interview Rejection Analysis</title>
+    <meta name="description" content="Upload your interview recording and receive a detailed AI-powered breakdown of why you didn't get the job, with actionable feedback and a targeted improvement plan.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+    <!-- ====== STEP 1: LANDING ====== -->
+    <section id="landing-section" class="step active">
+        <nav class="navbar">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" stroke="url(#lg1)" stroke-width="2.5"/><path d="M12 21V11l10 5-10 5z" fill="url(#lg1)"/><defs><linearGradient id="lg1" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs></svg>
+                <span>InterviewIQ</span>
+            </div>
+        </nav>
+
+        <main class="hero">
+            <div class="hero-badge">🎯 AI-Powered Interview Analysis</div>
+            <h1 class="hero-title">Know Exactly Why You<br><span class="gradient-text">Didn't Get The Job</span></h1>
+            <p class="hero-subtitle">Upload your interview transcript and receive a detailed, moment-by-moment breakdown of what went wrong — with precise, actionable feedback to ace your next one.</p>
+            <button id="get-started-btn" class="btn btn-primary btn-lg">
+                Get Started
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 10h10m0 0l-4-4m4 4l-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+
+            <div class="hero-stats">
+                <div class="stat-item"><span class="stat-value">6</span><span class="stat-label">Analysis Dimensions</span></div>
+                <div class="stat-divider"></div>
+                <div class="stat-item"><span class="stat-value">100%</span><span class="stat-label">Client-Side</span></div>
+                <div class="stat-divider"></div>
+                <div class="stat-item"><span class="stat-value">∞</span><span class="stat-label">Free Analyses</span></div>
+            </div>
+        </main>
+
+        <section class="features" id="features">
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🗣️</div>
+                    <h3>Speech Analysis</h3>
+                    <p>Detect filler words, pacing issues, and speaking patterns that undermine your credibility.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📋</div>
+                    <h3>Structure Evaluation</h3>
+                    <p>Evaluate answer organization using STAR framework, clarity, depth, and relevance metrics.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📉</div>
+                    <h3>Confidence Detection</h3>
+                    <p>Identify hesitation markers, hedging language, and confidence drops at specific questions.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Role Alignment</h3>
+                    <p>Map responses against ideal expectations for your target role and highlight gaps.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Weakness Ranking</h3>
+                    <p>Rank your weaknesses by impact on hiring decisions so you fix what matters most.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🗺️</div>
+                    <h3>Improvement Plan</h3>
+                    <p>Get a targeted action plan with specific exercises to improve before your next interview.</p>
+                </div>
+            </div>
+        </section>
+    </section>
+
+    <!-- ====== STEP 2: SETUP ====== -->
+    <section id="setup-section" class="step">
+        <nav class="navbar">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" stroke="url(#lg2)" stroke-width="2.5"/><path d="M12 21V11l10 5-10 5z" fill="url(#lg2)"/><defs><linearGradient id="lg2" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs></svg>
+                <span>InterviewIQ</span>
+            </div>
+            <button id="back-to-landing" class="btn btn-ghost btn-sm">← Back</button>
+        </nav>
+
+        <div class="setup-container">
+            <div class="setup-header">
+                <h2>Setup Your Analysis</h2>
+                <p>Select your target role and provide your interview transcript for analysis.</p>
+            </div>
+
+            <!-- Role Selection -->
+            <div class="setup-block">
+                <h3 class="block-title"><span class="step-number">1</span> Select Target Role</h3>
+                <div class="role-grid" id="role-grid">
+                    <button class="role-card" data-role="software-engineer"><span class="role-icon">💻</span><span class="role-name">Software Engineer</span></button>
+                    <button class="role-card" data-role="product-manager"><span class="role-icon">📦</span><span class="role-name">Product Manager</span></button>
+                    <button class="role-card" data-role="data-analyst"><span class="role-icon">📊</span><span class="role-name">Data Analyst</span></button>
+                    <button class="role-card" data-role="marketing-manager"><span class="role-icon">📣</span><span class="role-name">Marketing Manager</span></button>
+                    <button class="role-card" data-role="ux-designer"><span class="role-icon">🎨</span><span class="role-name">UX Designer</span></button>
+                    <button class="role-card" data-role="general"><span class="role-icon">🌐</span><span class="role-name">General / Other</span></button>
+                </div>
+            </div>
+
+            <!-- Input Method -->
+            <div class="setup-block">
+                <h3 class="block-title"><span class="step-number">2</span> Provide Interview Transcript</h3>
+                <div class="input-tabs" id="input-tabs">
+                    <button class="tab active" data-tab="paste">📝 Paste Transcript</button>
+                    <button class="tab" data-tab="record">🎙️ Record Live</button>
+                </div>
+
+                <div class="tab-content active" id="paste-tab">
+                    <textarea id="transcript-input" class="textarea-main" rows="14" placeholder="Paste your interview transcript here...
+
+Format example:
+Q: Tell me about yourself.
+A: I have been working as a software developer for three years at XYZ company...
+
+Q: What is your greatest weakness?
+A: I think my biggest weakness is probably time management..."></textarea>
+                    <div class="textarea-footer">
+                        <span class="help-text">Start questions with <strong>Q:</strong> and answers with <strong>A:</strong></span>
+                        <button id="load-demo-btn" class="btn btn-ghost btn-sm">Load Demo Transcript</button>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="record-tab">
+                    <div class="recorder">
+                        <button id="record-btn" class="record-button" aria-label="Start recording">
+                            <span class="record-dot"></span>
+                        </button>
+                        <div id="record-status" class="record-status">Click to start recording</div>
+                        <div id="record-timer" class="record-timer">00:00</div>
+                        <div id="live-transcript" class="live-transcript-box"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analyze Button -->
+            <button id="analyze-btn" class="btn btn-primary btn-lg btn-full">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="2"/><path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                Analyze Interview
+            </button>
+        </div>
+    </section>
+
+    <!-- ====== STEP 3: PROCESSING ====== -->
+    <section id="processing-section" class="step">
+        <div class="processing-container">
+            <div class="processing-orbs">
+                <div class="orb orb-1"></div>
+                <div class="orb orb-2"></div>
+                <div class="orb orb-3"></div>
+            </div>
+            <h2 class="processing-title">Analyzing Your Interview</h2>
+            <p class="processing-subtitle">This will take just a moment...</p>
+
+            <div class="proc-steps" id="proc-steps">
+                <div class="proc-step" data-step="parse"><div class="proc-check">✓</div><span>Parsing transcript segments</span></div>
+                <div class="proc-step" data-step="speech"><div class="proc-check">✓</div><span>Analyzing speech patterns</span></div>
+                <div class="proc-step" data-step="structure"><div class="proc-check">✓</div><span>Evaluating answer structure</span></div>
+                <div class="proc-step" data-step="confidence"><div class="proc-check">✓</div><span>Detecting confidence levels</span></div>
+                <div class="proc-step" data-step="role"><div class="proc-check">✓</div><span>Matching role expectations</span></div>
+                <div class="proc-step" data-step="report"><div class="proc-check">✓</div><span>Generating detailed report</span></div>
+            </div>
+
+            <div class="progress-bar-wrapper">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="analysis-progress"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== STEP 4: DASHBOARD ====== -->
+    <section id="dashboard-section" class="step">
+        <nav class="navbar">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" stroke="url(#lg3)" stroke-width="2.5"/><path d="M12 21V11l10 5-10 5z" fill="url(#lg3)"/><defs><linearGradient id="lg3" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs></svg>
+                <span>InterviewIQ</span>
+            </div>
+            <button id="new-analysis-btn" class="btn btn-ghost btn-sm">+ New Analysis</button>
+        </nav>
+
+        <div class="dashboard-container">
+            <!-- Overall Score -->
+            <div class="score-hero" id="score-hero">
+                <canvas id="score-gauge" width="220" height="220"></canvas>
+                <div class="score-number" id="score-number">0</div>
+                <div class="score-label">Overall Interview Score</div>
+                <div class="score-verdict" id="score-verdict"></div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card" id="stat-speech"><div class="stat-card-icon">🗣️</div><div class="stat-card-value">—</div><div class="stat-card-label">Speech Quality</div></div>
+                <div class="stat-card" id="stat-structure"><div class="stat-card-icon">📋</div><div class="stat-card-value">—</div><div class="stat-card-label">Answer Structure</div></div>
+                <div class="stat-card" id="stat-confidence"><div class="stat-card-icon">📉</div><div class="stat-card-value">—</div><div class="stat-card-label">Confidence Level</div></div>
+                <div class="stat-card" id="stat-role"><div class="stat-card-icon">🎯</div><div class="stat-card-value">—</div><div class="stat-card-label">Role Alignment</div></div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-grid">
+                <div class="chart-card"><h3>Filler Word Distribution</h3><canvas id="filler-chart" width="500" height="300"></canvas></div>
+                <div class="chart-card"><h3>Answer Quality per Question</h3><canvas id="quality-chart" width="500" height="300"></canvas></div>
+                <div class="chart-card"><h3>Confidence per Response</h3><canvas id="confidence-chart" width="500" height="300"></canvas></div>
+                <div class="chart-card"><h3>Competency Coverage</h3><canvas id="competency-chart" width="500" height="300"></canvas></div>
+            </div>
+
+            <!-- Detailed Feedback -->
+            <div class="section-block">
+                <h2 class="section-title">📝 Moment-by-Moment Feedback</h2>
+                <div id="feedback-timeline" class="feedback-timeline"></div>
+            </div>
+
+            <!-- Weakness Ranking -->
+            <div class="section-block">
+                <h2 class="section-title">⚠️ Weakness Ranking</h2>
+                <p class="section-subtitle">Ranked by impact on hiring decisions</p>
+                <div id="weakness-list" class="weakness-list"></div>
+            </div>
+
+            <!-- Improvement Plan -->
+            <div class="section-block">
+                <h2 class="section-title">🗺️ Your Improvement Plan</h2>
+                <div id="improvement-plan" class="improvement-plan"></div>
+            </div>
+
+            <!-- Download -->
+            <div class="download-section">
+                <button id="download-report-btn" class="btn btn-primary btn-lg">
+                    📄 Download Full Report (PDF-ready)
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <script src="js/charts.js"></script>
+    <script src="js/speech-analyzer.js"></script>
+    <script src="js/structure-analyzer.js"></script>
+    <script src="js/confidence-analyzer.js"></script>
+    <script src="js/role-matcher.js"></script>
+    <script src="js/report-generator.js"></script>
+    <script src="js/transcriber.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
