@@ -179,18 +179,60 @@
         </nav>
 
         <div class="dashboard-container">
+            <!-- Performance Badges -->
+            <div class="badges-row" id="badges-row"></div>
+
+            <!-- Score Hero -->
             <div class="score-hero">
                 <canvas id="mock-score-gauge" width="220" height="220"></canvas>
                 <div class="score-number" id="mock-score-number">0</div>
                 <div class="score-label">Mock Interview Score</div>
                 <div class="score-verdict" id="mock-score-verdict"></div>
+                <div class="score-trend" id="score-trend"></div>
             </div>
 
+            <!-- Enhanced Stats Row -->
             <div class="session-stats-row" id="mock-stats-row">
-                <div class="stat-card"><div class="stat-card-icon">📝</div><div class="stat-card-value" id="mock-stat-questions">—</div><div class="stat-card-label">Questions</div></div>
-                <div class="stat-card"><div class="stat-card-icon">⏱️</div><div class="stat-card-value" id="mock-stat-duration">—</div><div class="stat-card-label">Duration</div></div>
-                <div class="stat-card"><div class="stat-card-icon">📖</div><div class="stat-card-value" id="mock-stat-words">—</div><div class="stat-card-label">Avg Words</div></div>
-                <div class="stat-card"><div class="stat-card-icon">🎯</div><div class="stat-card-value" id="mock-stat-answers">—</div><div class="stat-card-label">Answered</div></div>
+                <div class="stat-card">
+                    <div class="stat-card-icon">📝</div>
+                    <div class="stat-card-value" id="mock-stat-questions">—</div>
+                    <div class="stat-card-label">Questions</div>
+                    <canvas id="mock-questions-spark" width="80" height="30" style="margin-top:8px;"></canvas>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon">⏱️</div>
+                    <div class="stat-card-value" id="mock-stat-duration">—</div>
+                    <div class="stat-card-label">Duration</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon">📖</div>
+                    <div class="stat-card-value" id="mock-stat-words">—</div>
+                    <div class="stat-card-label">Avg Words</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon">🎯</div>
+                    <div class="stat-card-value" id="mock-stat-answers">—</div>
+                    <div class="stat-card-label">Answered</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon">🗣️</div>
+                    <div class="stat-card-value" id="mock-stat-filler">—</div>
+                    <div class="stat-card-label">Filler Rate</div>
+                </div>
+            </div>
+
+            <!-- Best/Worst Answer Highlights -->
+            <div class="highlights-row" id="highlights-row">
+                <div class="highlight-card highlight-best" id="highlight-best">
+                    <div class="highlight-label">🏆 Best Answer</div>
+                    <div class="highlight-question" id="best-question">—</div>
+                    <div class="highlight-score" id="best-score">—</div>
+                </div>
+                <div class="highlight-card highlight-worst" id="highlight-worst">
+                    <div class="highlight-label">🔧 Needs Work</div>
+                    <div class="highlight-question" id="worst-question">—</div>
+                    <div class="highlight-score" id="worst-score">—</div>
+                </div>
             </div>
 
             <!-- Core Dimension Scores -->
@@ -215,13 +257,25 @@
                         <div class="dimension-bar"><div class="dimension-fill" id="mock-dim-confidence-bar" style="width:0%"></div></div>
                         <div class="dimension-desc">Assertive language, conviction</div>
                     </div>
+                    <div class="dimension-card">
+                        <div class="dimension-header"><span class="dimension-icon">🎯</span><span>Role Relevance</span></div>
+                        <div class="dimension-score" id="mock-dim-relevance">—</div>
+                        <div class="dimension-bar"><div class="dimension-fill" id="mock-dim-relevance-bar" style="width:0%"></div></div>
+                        <div class="dimension-desc">Direct answers, role alignment</div>
+                    </div>
                 </div>
             </div>
 
             <!-- Charts Row -->
             <div class="charts-grid">
+                <div class="chart-card"><h3>Score Trend Across Questions</h3><canvas id="mock-trend-chart" width="500" height="260"></canvas></div>
+                <div class="chart-card"><h3>Performance Radar</h3><canvas id="mock-radar-chart" width="500" height="300"></canvas></div>
+            </div>
+
+            <!-- Charts Row 2 -->
+            <div class="charts-grid">
                 <div class="chart-card"><h3>Score Per Question</h3><canvas id="mock-score-chart" width="500" height="220"></canvas></div>
-                <div class="chart-card"><h3>Speech vs Structure vs Confidence</h3><canvas id="mock-dimension-chart" width="500" height="220"></canvas></div>
+                <div class="chart-card"><h3>Dimension Breakdown</h3><canvas id="mock-dimension-chart" width="500" height="220"></canvas></div>
             </div>
 
             <!-- Question-by-Question Review -->
@@ -231,12 +285,25 @@
                 <div class="question-accordion" id="mock-question-accordion"></div>
             </div>
 
-            <!-- Strengths & Weaknesses Summary -->
+            <!-- Strengths Summary -->
+            <div class="section-block">
+                <h2 class="section-title">✨ Key Strengths</h2>
+                <div id="mock-strengths-list" class="strengths-grid"></div>
+            </div>
+
+            <!-- Weaknesses Summary -->
             <div class="section-block">
                 <h2 class="section-title">⚠️ Key Areas to Improve</h2>
                 <div id="mock-weakness-detail" class="weakness-list"></div>
             </div>
 
+            <!-- Comparative Insights -->
+            <div class="section-block">
+                <h2 class="section-title">🔍 Analyst Insights</h2>
+                <div id="mock-insights" class="insights-list"></div>
+            </div>
+
+            <!-- Improvement Plan -->
             <div class="section-block">
                 <h2 class="section-title">🗺️ Improvement Plan</h2>
                 <div id="mock-improvement-plan" class="improvement-plan"></div>
@@ -450,6 +517,17 @@ A: I think my biggest weakness is probably time management..."></textarea>
                 <div class="chart-card"><h3>Answer Quality per Question</h3><canvas id="quality-chart" width="500" height="300"></canvas></div>
                 <div class="chart-card"><h3>Confidence per Response</h3><canvas id="confidence-chart" width="500" height="300"></canvas></div>
                 <div class="chart-card"><h3>Competency Coverage</h3><canvas id="competency-chart" width="500" height="300"></canvas></div>
+            </div>
+
+            <div class="section-block">
+                <h2 class="section-title">🔍 Dashboard Insights</h2>
+                <div id="dashboard-insights" class="insights-list"></div>
+            </div>
+
+            <div class="section-block">
+                <h2 class="section-title">🧠 Question-by-Question Review</h2>
+                <p class="section-subtitle">Tap each response for structure, confidence, issues, and targeted guidance.</p>
+                <div id="question-review" class="question-accordion"></div>
             </div>
 
             <!-- Detailed Feedback -->

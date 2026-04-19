@@ -41,194 +41,281 @@
         const starPatterns = /\b(because|therefore|as a result|so that|in order to)\b/gi;
         if ((answer || '').match(starPatterns)) baseScore += 10;
 
-        const score = Math.min(100, Math.max(0, Math.round(baseScore)));
+        const hedges = (answer || '').match(/\b(maybe|i think|i believe|probably|sort of|kind of)\b/gi) || [];
+        const assertive = (answer || '').match(/\b(definitely|absolutely|certainly|i know|i can|i will)\b/gi) || [];
+
+        const speechScore = Math.max(0, Math.min(100, 100 - fillers.length * 8));
+        const structureScore = Math.min(100, baseScore + (starPatterns.test(answer || '') ? 20 : 0));
+        const confidenceScore = Math.max(0, Math.min(100, 100 - hedges.length * 10 + assertive.length * 8));
+        const relevanceScore = Math.min(100, 40 + Math.min(50, words / 2));
+        const overallScore = Math.min(100, Math.max(0, Math.round(baseScore)));
 
         let verdict = 'Needs Improvement';
-        if (score >= 80) verdict = 'Strong Response';
-        else if (score >= 65) verdict = 'Good Response';
-        else if (score >= 50) verdict = 'Average Response';
+        if (overallScore >= 85) verdict = 'Exceptional Response';
+        else if (overallScore >= 75) verdict = 'Strong Response';
+        else if (overallScore >= 60) verdict = 'Good Response';
+        else if (overallScore >= 45) verdict = 'Needs Improvement';
+
+        const roleName = (role || 'general').replace('-', ' ');
+        const questionLower = (question || '').toLowerCase();
+        const isBehavioral = questionLower.includes('time when') || questionLower.includes('describe a situation') || questionLower.includes('tell me about');
+        const questionType = isBehavioral ? 'behavioral' : questionLower.includes('what would') || questionLower.includes('how would you handle') ? 'situational' : 'technical';
 
         return {
-            score,
+            score: overallScore,
             verdict,
+            speechScore,
+            structureScore,
+            confidenceScore,
+            relevanceScore,
             strengths: [
-                score >= 50 ? 'Demonstrates relevant experience' : null,
-                words >= 30 ? 'Provides an answer with reasonable depth' : null,
-                (answer || '').length >= 50 ? 'Attempts to address the question directly' : null
+                speechScore >= 60 && fillers.length <= 2 ? 'Speaks clearly with minimal filler words' : null,
+                structureScore >= 65 && starPatterns.test(answer || '') ? 'Uses structured approach to answer questions' : null,
+                confidenceScore >= 60 && assertive.length > 0 ? 'Demonstrates confidence in responses' : null,
+                relevanceScore >= 55 && words >= 30 ? 'Provides detailed, relevant answers' : null,
+                words >= 50 ? 'Shows ability to elaborate with examples' : null
             ].filter(Boolean),
             improvements: [
-                words < 30 ? 'Expand your answer with more specific examples' : null,
-                fillers.length > 2 ? 'Reduce filler words like "um", "uh", "like"' : null,
-                !starPatterns.test(answer || '') ? 'Use the STAR method to structure your response' : null,
-                score < 50 ? 'Focus on being more confident and direct' : null
+                speechScore < 60 ? 'Reduce filler words and practice more fluent delivery' : null,
+                structureScore < 65 ? 'Use STAR method to structure behavioral answers' : null,
+                confidenceScore < 60 ? 'Replace hedging phrases with more assertive language' : null,
+                relevanceScore < 55 ? 'Ensure answers directly address the question asked' : null,
+                words < 30 ? 'Expand answers with more specific examples and details' : null
             ].filter(Boolean),
-            oneLiner: score >= 65
-                ? 'A solid response that demonstrates good interview skills.'
-                : 'Consider expanding your answer and being more structured.'
+            oneLiner: overallScore >= 65
+                ? 'A solid response demonstrating good interview skills for a ' + roleName + ' role.'
+                : 'Consider expanding your answers and using more structured responses.',
+            questionType,
+            keyMoment: fillers.length > 3 ? 'Noticeable filler word usage affects fluency' : starPatterns.test(answer || '') ? 'Good use of structured response format' : 'Direct and concise delivery'
         };
     }
 
-    // ─── Groq API ───────────────────────────────────────────
+    // ─── Groq API (via Vercel Proxy) ───────────────────────────────────────────
     async function groqGenerateQuestions(role, experience, count, apiKey) {
-        const provider = PROVIDERS.GROQ;
-        const prompt = `You are an interview question generator. Generate exactly ${count} interview questions for a ${experience} level ${role.replace('-', ' ')} position.
+        const expLabel = experience === 'junior' ? 'entry-level (0-2 years)' : experience === 'mid' ? 'mid-level (3-5 years)' : 'senior-level (5+ years)';
+        const roleName = role.replace('-', ' ');
+        const prompt = `You are a professional interview coach generating questions for a ${expLabel} ${roleName} position.
 
-Return ONLY a JSON array of question strings, no explanation or markup. Example: ["Question 1?", "Question 2?"]
+Generate exactly ${count} questions that are diverse in type and realistic for actual interviews.
 
-Generate questions that are varied in difficulty and type (behavioral, situational, technical), relevant to the ${role.replace('-', ' ')} role at ${experience} level, and commonly asked in real interviews.`;
+Question types to include:
+- Behavioral (STAR-format): "Tell me about a time when..." / "Describe a situation where..."
+- Situational: "What would you do if..." / "How would you handle..."
+- Technical/Role-specific: questions testing actual ${roleName} knowledge and skills
+- Curveball: unexpected scenarios that test thinking on your feet
 
-        const response = await fetch(provider.questionUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                model: provider.model,
-                max_tokens: provider.maxTokens,
-                messages: [{ role: 'user', content: prompt }],
-                temperature: 0.7
-            })
-        });
+For ${experience} level candidates, include:
+- Junior: foundational questions, growth mindset, basic scenario handling
+- Mid: leadership moments, trade-off decisions, technical depth questions
+- Senior: strategy, influencing without authority, high-complexity scenarios, mentoring
 
-        if (!response.ok) throw new Error(`Groq API error: ${response.status}`);
+Make questions specific and memorable. Avoid generic questions. Each question should test a distinct skill or competency.
 
-        const data = await response.json();
-        const rawContent = data.choices?.[0]?.message?.content || '';
+Return ONLY a valid JSON array of question strings, no markup or explanation. Example: ["Question 1?", "Question 2?"]`;
 
         try {
-            const questions = JSON.parse(rawContent);
-            if (Array.isArray(questions) && questions.length > 0) return questions.slice(0, count);
-        } catch { /* ignore */ }
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    provider: 'groq',
+                    apiKey: apiKey,
+                    model: 'llama-3.1-8b-instant',
+                    messages: [{ role: 'user', content: prompt }]
+                })
+            });
+
+            if (!response.ok) throw new Error(`API proxy error: ${response.status}`);
+
+            const data = await response.json();
+            const rawContent = data.content || '';
+
+            try {
+                const questions = JSON.parse(rawContent);
+                if (Array.isArray(questions) && questions.length > 0) return questions.slice(0, count);
+            } catch { /* ignore */ }
+        } catch (err) {
+            console.warn('Groq API failed, using fallback:', err.message);
+        }
 
         return window.questionBank.getQuestions(role, experience, count);
     }
 
     async function groqGetFeedback(question, answer, role, apiKey) {
-        const provider = PROVIDERS.GROQ;
-        const prompt = `You are an interview coach providing feedback on a job interview response.
+        const roleName = role.replace('-', ' ');
+        const prompt = `You are an expert interview coach evaluating a candidate's response to this interview question for a ${roleName} position.
 
-Role: ${role.replace('-', ' ')}
 Question: ${question}
-Answer: ${answer || '(no answer provided)'}
+Candidate's Answer: ${answer || '(no answer provided)'}
 
-Analyze this interview response and return ONLY a valid JSON object with this exact structure:
+Evaluate the response across FOUR dimensions and return a detailed JSON assessment:
+
 {
-  "score": number (0-100),
-  "verdict": "Strong Response" | "Good Response" | "Needs Improvement",
-  "strengths": string[] (2-4 specific positive observations),
-  "improvements": string[] (2-4 specific actionable improvements),
-  "oneLiner": "A single sentence summary feedback"
+  "score": overall score 0-100,
+  "verdict": "Exceptional Response" | "Strong Response" | "Good Response" | "Needs Improvement" | "Weak Response",
+  "speechScore": speech quality score 0-100 (filler words, pacing, clarity, tone),
+  "structureScore": answer structure score 0-100 (STAR method usage, logical flow, organization, depth),
+  "confidenceScore": confidence level score 0-100 (assertive language, conviction, hesitation markers),
+  "relevanceScore": role relevance score 0-100 (addressing the question, role alignment, specific examples),
+  "strengths": [3-5 specific positive observations about what the candidate did well],
+  "improvements": [3-5 specific, actionable suggestions for improvement],
+  "oneLiner": "one sentence overall feedback summary",
+  "questionType": "behavioral" | "situational" | "technical" | "curveball",
+  "keyMoment": "a specific phrase or moment in the answer worth highlighting"
 }
 
-Scoring criteria:
-- Score 80-100: Excellent structure, specific examples, confident language, STAR format used
-- Score 60-79: Good content but missing some structure or examples
-- Score 40-59: Basic answer but lacks depth, examples, or confidence
-- Score 0-39: Poor answer that doesn't address the question well
+Scoring guidelines:
+- Speech (25% weight): No fillers, good pace, clear articulation, confident tone
+- Structure (30% weight): STAR format used, clear beginning/middle/end, good depth
+- Confidence (25% weight): Assertive language, no hedging, clear conviction
+- Relevance (20% weight): Directly addresses question, shows ${roleName} alignment
 
-Focus on: clarity, STAR method usage, specific metrics/examples, confident language, relevance to the role.`;
+Focus on specificity. Generic praise or generic suggestions earn lower scores. Identify the EXACT strength or weakness in the answer.`;
 
-        const response = await fetch(provider.feedbackUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                model: provider.model,
-                max_tokens: provider.maxTokens,
-                messages: [{ role: 'user', content: prompt }],
-                temperature: 0.3
-            })
-        });
-
-        if (!response.ok) throw new Error(`Groq API error: ${response.status}`);
-
-        const data = await response.json();
-        const rawContent = data.choices?.[0]?.message?.content || '';
-
-        return parseFeedbackResponse(rawContent);
-    }
-
-    // ─── Gemini API ───────────────────────────────────────────
-    async function geminiGenerateQuestions(role, experience, count, apiKey) {
-        const provider = PROVIDERS.GEMINI;
-        const prompt = `You are an interview question generator. Generate exactly ${count} interview questions for a ${experience} level ${role.replace('-', ' ')} position.
-
-Return ONLY a JSON array of question strings, no explanation or markup. Example: ["Question 1?", "Question 2?"]
-
-Generate questions that are varied in difficulty and type (behavioral, situational, technical), relevant to the ${role.replace('-', ' ')} role at ${experience} level, and commonly asked in real interviews.`;
-
-        const response = await fetch(
-            `${provider.baseUrl}/${provider.model}:generateContent?key=${apiKey}`,
-            {
+        try {
+            const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { maxOutputTokens: provider.maxTokens, temperature: 0.7 }
+                    provider: 'groq',
+                    apiKey: apiKey,
+                    model: 'llama-3.1-8b-instant',
+                    messages: [{ role: 'user', content: prompt }]
                 })
-            }
-        );
+            });
 
-        if (!response.ok) throw new Error(`Gemini API error: ${response.status}`);
+            if (!response.ok) throw new Error(`API proxy error: ${response.status}`);
 
-        const data = await response.json();
-        const rawContent = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const data = await response.json();
+            const rawContent = data.content || '';
+
+            return parseFeedbackResponse(rawContent);
+        } catch (err) {
+            console.warn('Groq feedback failed, using fallback:', err.message);
+            return generateFallbackFeedback(question, answer, role);
+        }
+    }
+
+    // ─── Gemini API (via Vercel Proxy) ───────────────────────────────────────────
+    async function geminiGenerateQuestions(role, experience, count, apiKey) {
+        const expLabel = experience === 'junior' ? 'entry-level (0-2 years)' : experience === 'mid' ? 'mid-level (3-5 years)' : 'senior-level (5+ years)';
+        const roleName = role.replace('-', ' ');
+        const prompt = `You are a professional interview coach generating questions for a ${expLabel} ${roleName} position.
+
+Generate exactly ${count} questions that are diverse in type and realistic for actual interviews.
+
+Question types to include:
+- Behavioral (STAR-format): "Tell me about a time when..." / "Describe a situation where..."
+- Situational: "What would you do if..." / "How would you handle..."
+- Technical/Role-specific: questions testing actual ${roleName} knowledge and skills
+- Curveball: unexpected scenarios that test thinking on your feet
+
+For ${experience} level candidates, include:
+- Junior: foundational questions, growth mindset, basic scenario handling
+- Mid: leadership moments, trade-off decisions, technical depth questions
+- Senior: strategy, influencing without authority, high-complexity scenarios, mentoring
+
+Make questions specific and memorable. Avoid generic questions. Each question should test a distinct skill or competency.
+
+Return ONLY a valid JSON array of question strings, no markup or explanation. Example: ["Question 1?", "Question 2?"]`;
 
         try {
-            const questions = JSON.parse(rawContent);
-            if (Array.isArray(questions) && questions.length > 0) return questions.slice(0, count);
-        } catch { /* ignore */ }
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    provider: 'gemini',
+                    apiKey: apiKey,
+                    model: 'gemini-1.5-flash',
+                    messages: [{ role: 'user', content: prompt }]
+                })
+            });
+
+            if (!response.ok) throw new Error(`API proxy error: ${response.status}`);
+
+            const data = await response.json();
+            const rawContent = data.content || '';
+
+            try {
+                const questions = JSON.parse(rawContent);
+                if (Array.isArray(questions) && questions.length > 0) return questions.slice(0, count);
+            } catch { /* ignore */ }
+        } catch (err) {
+            console.warn('Gemini API failed, using fallback:', err.message);
+        }
 
         return window.questionBank.getQuestions(role, experience, count);
     }
 
     async function geminiGetFeedback(question, answer, role, apiKey) {
-        const provider = PROVIDERS.GEMINI;
-        const prompt = `You are an interview coach providing feedback on a job interview response.
+        const roleName = role.replace('-', ' ');
+        const prompt = `You are an expert interview coach evaluating a candidate's response to this interview question for a ${roleName} position.
 
-Role: ${role.replace('-', ' ')}
 Question: ${question}
-Answer: ${answer || '(no answer provided)'}
+Candidate's Answer: ${answer || '(no answer provided)'}
 
-Analyze this interview response and return ONLY a valid JSON object with this exact structure:
+Evaluate the response across FOUR dimensions and return a detailed JSON assessment:
+
 {
-  "score": number (0-100),
-  "verdict": "Strong Response" | "Good Response" | "Needs Improvement",
-  "strengths": string[] (2-4 specific positive observations),
-  "improvements": string[] (2-4 specific actionable improvements),
-  "oneLiner": "A single sentence summary feedback"
+  "score": overall score 0-100,
+  "verdict": "Exceptional Response" | "Strong Response" | "Good Response" | "Needs Improvement" | "Weak Response",
+  "speechScore": speech quality score 0-100 (filler words, pacing, clarity, tone),
+  "structureScore": answer structure score 0-100 (STAR method usage, logical flow, organization, depth),
+  "confidenceScore": confidence level score 0-100 (assertive language, conviction, hesitation markers),
+  "relevanceScore": role relevance score 0-100 (addressing the question, role alignment, specific examples),
+  "strengths": [3-5 specific positive observations about what the candidate did well],
+  "improvements": [3-5 specific, actionable suggestions for improvement],
+  "oneLiner": "one sentence overall feedback summary",
+  "questionType": "behavioral" | "situational" | "technical" | "curveball",
+  "keyMoment": "a specific phrase or moment in the answer worth highlighting"
 }
 
-Focus on: clarity, STAR method usage, specific metrics/examples, confident language.`;
+Scoring guidelines:
+- Speech (25% weight): No fillers, good pace, clear articulation, confident tone
+- Structure (30% weight): STAR format used, clear beginning/middle/end, good depth
+- Confidence (25% weight): Assertive language, no hedging, clear conviction
+- Relevance (20% weight): Directly addresses question, shows ${roleName} alignment
 
-        const response = await fetch(
-            `${provider.baseUrl}/${provider.model}:generateContent?key=${apiKey}`,
-            {
+Focus on specificity. Generic praise or generic suggestions earn lower scores.`;
+
+        try {
+            const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { maxOutputTokens: provider.maxTokens, temperature: 0.3 }
+                    provider: 'gemini',
+                    apiKey: apiKey,
+                    model: 'gemini-1.5-flash',
+                    messages: [{ role: 'user', content: prompt }]
                 })
-            }
-        );
+            });
 
-        if (!response.ok) throw new Error(`Gemini API error: ${response.status}`);
+            if (!response.ok) throw new Error(`API proxy error: ${response.status}`);
 
-        const data = await response.json();
-        const rawContent = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const data = await response.json();
+            const rawContent = data.content || '';
 
-        return parseFeedbackResponse(rawContent);
+            return parseFeedbackResponse(rawContent);
+        } catch (err) {
+            console.warn('Gemini feedback failed, using fallback:', err.message);
+            return generateFallbackFeedback(question, answer, role);
+        }
     }
 
     // ─── Shared parser ─────────────────────────────────────────
     function parseFeedbackResponse(rawContent) {
         try {
             const feedback = JSON.parse(rawContent);
-            if (feedback && typeof feedback.score === 'number') return feedback;
+            if (feedback && typeof feedback.score === 'number') {
+                // Ensure all sub-scores exist (backward compatibility)
+                feedback.speechScore = feedback.speechScore || Math.round(feedback.score * 0.9);
+                feedback.structureScore = feedback.structureScore || Math.round(feedback.score * 0.85);
+                feedback.confidenceScore = feedback.confidenceScore || Math.round(feedback.score * 0.95);
+                feedback.relevanceScore = feedback.relevanceScore || Math.round(feedback.score * 0.9);
+                feedback.questionType = feedback.questionType || 'behavioral';
+                feedback.keyMoment = feedback.keyMoment || feedback.oneLiner || '';
+                return feedback;
+            }
         } catch { /* ignore */ }
 
         // Try extracting JSON from markdown code blocks
@@ -237,7 +324,15 @@ Focus on: clarity, STAR method usage, specific metrics/examples, confident langu
         if (jsonMatch) {
             try {
                 const feedback = JSON.parse(jsonMatch[1] || jsonMatch[0]);
-                if (feedback && typeof feedback.score === 'number') return feedback;
+                if (feedback && typeof feedback.score === 'number') {
+                    feedback.speechScore = feedback.speechScore || Math.round(feedback.score * 0.9);
+                    feedback.structureScore = feedback.structureScore || Math.round(feedback.score * 0.85);
+                    feedback.confidenceScore = feedback.confidenceScore || Math.round(feedback.score * 0.95);
+                    feedback.relevanceScore = feedback.relevanceScore || Math.round(feedback.score * 0.9);
+                    feedback.questionType = feedback.questionType || 'behavioral';
+                    feedback.keyMoment = feedback.keyMoment || feedback.oneLiner || '';
+                    return feedback;
+                }
             } catch { /* ignore */ }
         }
 

@@ -273,6 +273,201 @@ class ChartRenderer {
             ctx.fillText(labels[i], px, py);
         }
     }
+
+    /* --- Line Chart (Score Trend) --- */
+    drawLineChart(canvasId, labels, values, options = {}) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        const parent = canvas.parentElement;
+        const displayW = canvas.clientWidth || (parent ? parent.clientWidth - 48 : 0) || 500;
+        const displayH = 260;
+        canvas.width = displayW * dpr;
+        canvas.height = displayH * dpr;
+        canvas.style.width = displayW + 'px';
+        canvas.style.height = displayH + 'px';
+        ctx.scale(dpr, dpr);
+
+        const pad = { top: 20, right: 20, bottom: 50, left: 45 };
+        const chartW = displayW - pad.left - pad.right;
+        const chartH = displayH - pad.top - pad.bottom;
+        const maxVal = Math.max(...values, 1) * 1.2;
+        const minVal = Math.min(...values, 0) * 0.8;
+        const range = maxVal - minVal || 1;
+
+        ctx.clearRect(0, 0, displayW, displayH);
+
+        const gridLines = 5;
+        ctx.strokeStyle = this.colors.gridLine;
+        ctx.lineWidth = 1;
+        ctx.font = `11px Inter, sans-serif`;
+        ctx.fillStyle = this.colors.muted;
+        ctx.textAlign = 'right';
+        for (let i = 0; i <= gridLines; i++) {
+            const y = pad.top + (chartH / gridLines) * i;
+            const val = Math.round(maxVal - (range / gridLines) * i);
+            ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(displayW - pad.right, y); ctx.stroke();
+            ctx.fillText(val, pad.left - 8, y + 4);
+        }
+
+        const points = values.map((v, i) => ({
+            x: pad.left + (i / Math.max(values.length - 1, 1)) * chartW,
+            y: pad.top + chartH - ((v - minVal) / range) * chartH
+        }));
+
+        const gradient = ctx.createLinearGradient(0, pad.top, 0, pad.top + chartH);
+        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.25)');
+        gradient.addColorStop(1, 'rgba(59, 130, 246, 0.02)');
+
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, pad.top + chartH);
+        points.forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.lineTo(points[points.length - 1].x, pad.top + chartH);
+        ctx.closePath();
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        ctx.beginPath();
+        points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+        ctx.strokeStyle = this.colors.blue;
+        ctx.lineWidth = 2.5;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        points.forEach((p, i) => {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 4, 0, 2 * Math.PI);
+            ctx.fillStyle = this.colors.blue;
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        });
+
+        ctx.fillStyle = this.colors.muted;
+        ctx.font = `11px Inter, sans-serif`;
+        ctx.textAlign = 'center';
+        labels.forEach((label, i) => {
+            const x = pad.left + (i / Math.max(labels.length - 1, 1)) * chartW;
+            ctx.fillText(label, x, pad.top + chartH + 18);
+        });
+
+        ctx.fillStyle = this.colors.text;
+        ctx.font = `10px Inter, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText('Score', pad.left - 35, pad.top + chartH / 2);
+    }
+
+    /* --- Sparkline --- */
+    drawSparkline(canvasId, values, color = '#3b82f6') {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        const displayW = 80, displayH = 30;
+        canvas.width = displayW * dpr;
+        canvas.height = displayH * dpr;
+        canvas.style.width = displayW + 'px';
+        canvas.style.height = displayH + 'px';
+        ctx.scale(dpr, dpr);
+
+        const pad = 2;
+        const chartW = displayW - pad * 2;
+        const chartH = displayH - pad * 2;
+        const maxVal = Math.max(...values, 1);
+        const minVal = Math.min(...values, 0);
+        const range = maxVal - minVal || 1;
+
+        ctx.clearRect(0, 0, displayW, displayH);
+
+        const points = values.map((v, i) => ({
+            x: pad + (i / Math.max(values.length - 1, 1)) * chartW,
+            y: pad + chartH - ((v - minVal) / range) * chartH
+        }));
+
+        ctx.beginPath();
+        points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+    }
+
+    /* --- Stacked Bar Chart --- */
+    drawStackedBarChart(canvasId, labels, datasets, options = {}) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        const parent = canvas.parentElement;
+        const displayW = canvas.clientWidth || (parent ? parent.clientWidth - 48 : 0) || 500;
+        const displayH = 280;
+        canvas.width = displayW * dpr;
+        canvas.height = displayH * dpr;
+        canvas.style.width = displayW + 'px';
+        canvas.style.height = displayH + 'px';
+        ctx.scale(dpr, dpr);
+
+        const pad = { top: 20, right: 20, bottom: 50, left: 45 };
+        const chartW = displayW - pad.left - pad.right;
+        const chartH = displayH - pad.top - pad.bottom;
+        const maxVal = options.maxVal || 100;
+        const barGap = chartW / labels.length;
+        const barW = Math.min(barGap * 0.7, 50);
+
+        ctx.clearRect(0, 0, displayW, displayH);
+
+        const gridLines = 5;
+        ctx.strokeStyle = this.colors.gridLine;
+        ctx.lineWidth = 1;
+        ctx.font = `11px Inter, sans-serif`;
+        ctx.fillStyle = this.colors.muted;
+        ctx.textAlign = 'right';
+        for (let i = 0; i <= gridLines; i++) {
+            const y = pad.top + (chartH / gridLines) * i;
+            const val = Math.round(maxVal - (maxVal / gridLines) * i);
+            ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(displayW - pad.right, y); ctx.stroke();
+            ctx.fillText(val, pad.left - 8, y + 4);
+        }
+
+        const colors = this.palette;
+
+        labels.forEach((label, li) => {
+            let stackY = pad.top + chartH;
+            const x = pad.left + barGap * li + barGap / 2 - barW / 2;
+
+            datasets.forEach((dataset, di) => {
+                const v = dataset.values[li] || 0;
+                const segH = (v / maxVal) * chartH;
+
+                ctx.fillStyle = colors[di % colors.length];
+                ctx.beginPath();
+                ctx.roundRect(x, stackY - segH, barW, segH, [4, 4, 0, 0]);
+                ctx.fill();
+
+                stackY -= segH;
+            });
+
+            ctx.fillStyle = this.colors.muted;
+            ctx.font = `11px Inter, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.fillText(label, x + barW / 2, pad.top + chartH + 18);
+        });
+
+        const legendY = pad.top + chartH + 40;
+        let legendX = pad.left;
+        datasets.forEach((dataset, di) => {
+            ctx.fillStyle = colors[di % colors.length];
+            ctx.fillRect(legendX, legendY - 8, 12, 12);
+            ctx.fillStyle = this.colors.text;
+            ctx.font = `11px Inter, sans-serif`;
+            ctx.textAlign = 'left';
+            ctx.fillText(dataset.label, legendX + 16, legendY + 2);
+            legendX += dataset.label.length * 7 + 40;
+        });
+    }
 }
 
 window.chartRenderer = new ChartRenderer();

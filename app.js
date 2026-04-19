@@ -250,6 +250,10 @@ A: Um, yeah, I guess I was wondering about the team structure? Like, how big is 
         // Charts
         renderCharts(report);
 
+        // Dashboard insights and question-level review
+        renderDashboardInsights(report);
+        renderQuestionReview(report.questionFeedback);
+
         // Feedback timeline
         renderFeedbackTimeline(report.questionFeedback);
 
@@ -311,6 +315,85 @@ A: Um, yeah, I guess I was wondering about the team structure? Like, how big is 
         const compNames = report.roleResult.competencyNames;
         const compValues = compNames.map(n => report.roleResult.competencyScores[n]);
         window.chartRenderer.drawRadarChart('competency-chart', compNames, compValues);
+    }
+
+    function renderDashboardInsights(report) {
+        const container = $('dashboard-insights');
+        container.innerHTML = '';
+        const feedback = report.questionFeedback || [];
+
+        if (feedback.length === 0) {
+            container.innerHTML = '<div class="insight-item"><div class="insight-icon">ℹ️</div><div class="insight-text">No question-level insights are available yet.</div></div>';
+            return;
+        }
+
+        const total = feedback.length;
+        const highCount = feedback.filter(q => q.score >= 70).length;
+        const mediumCount = feedback.filter(q => q.score >= 45 && q.score < 70).length;
+        const lowCount = total - highCount - mediumCount;
+
+        const dimensions = [
+            { name: 'Speech Quality', score: report.speechResult.score },
+            { name: 'Answer Structure', score: report.structureResult.score },
+            { name: 'Confidence', score: report.confidenceResult.score },
+            { name: 'Role Alignment', score: report.roleResult.score },
+        ].sort((a, b) => b.score - a.score);
+
+        const topQuestion = feedback.reduce((best, q, idx) => q.score > best.score ? { ...q, idx } : best, { score: -1, question: '' });
+        const bottomQuestion = feedback.reduce((worst, q, idx) => q.score < worst.score ? { ...q, idx } : worst, { score: 101, question: '' });
+        const fillerRate = report.speechResult.fillerRate || 0;
+
+        const insights = [
+            { icon: '💡', text: `Best dimension: ${dimensions[0].name} (${dimensions[0].score}/100).` },
+            { icon: '⚠️', text: `Biggest gap: ${dimensions[dimensions.length - 1].name} (${dimensions[dimensions.length - 1].score}/100).` },
+            { icon: '📊', text: `${highCount} strong, ${mediumCount} average, ${lowCount} weak response${lowCount === 1 ? '' : 's'} across ${total} questions.` },
+            { icon: '⭐', text: `Top response: Q${topQuestion.idx + 1} scored ${topQuestion.score}/100.` },
+            { icon: '🔧', text: `Focus on Q${bottomQuestion.idx + 1}: ${bottomQuestion.score}/100 for the biggest improvement opportunity.` },
+        ];
+
+        if (fillerRate > 4) {
+            insights.push({ icon: '🗣️', text: `Filler words are elevated at ${fillerRate}% — pause confidently instead of using "um" or "like".` });
+        } else {
+            insights.push({ icon: '🚀', text: `Speech is crisp with a low filler rate of ${fillerRate}%.` });
+        }
+
+        insights.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'insight-item';
+            card.innerHTML = `
+                <div class="insight-icon">${item.icon}</div>
+                <div class="insight-text">${escapeHtml(item.text)}</div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function renderQuestionReview(feedbackItems) {
+        const container = $('question-review');
+        container.innerHTML = '';
+        feedbackItems.forEach((item, i) => {
+            const scoreClass = item.score >= 70 ? 'good' : item.score >= 45 ? 'warning' : 'danger';
+            const detail = document.createElement('details');
+            detail.innerHTML = `
+                <summary>
+                    <span>Q${i + 1}: ${escapeHtml(item.question)}</span>
+                    <span class="qa-score">${item.score}/100</span>
+                </summary>
+                <div class="qa-content">
+                    <div class="qa-question">Answer preview</div>
+                    <div class="qa-answer">"${escapeHtml(item.answer)}"</div>
+                    <div class="qa-mini-scores">
+                        <div class="qa-mini-score">Structure: <span>${item.structureScore || 0}</span></div>
+                        <div class="qa-mini-score">Confidence: <span>${item.confidenceScore || 0}</span></div>
+                    </div>
+                    <div class="qa-tags">
+                        ${item.issues.map(iss => `<span class="qa-tag ${iss.type === 'warning' || iss.type === 'issue' ? 'improve' : 'good'}">${escapeHtml(iss.text)}</span>`).join('')}
+                    </div>
+                    <div class="qa-insight ${scoreClass}">${escapeHtml(item.feedback)}</div>
+                </div>
+            `;
+            container.appendChild(detail);
+        });
     }
 
     function renderFeedbackTimeline(feedbackItems) {
@@ -553,7 +636,7 @@ A: Um, yeah, I guess I was wondering about the team structure? Like, how big is 
             return;
         }
 
-        // If resuming from pause, keep existing transcript
+        // If resuming from pause, keep existing transcript and continue appending
         if (resumeTranscript) {
             mockCurrentAnswer = resumeTranscript;
             $('mock-live-answer').textContent = mockCurrentAnswer;
@@ -572,17 +655,35 @@ A: Um, yeah, I guess I was wondering about the team structure? Like, how big is 
         mockRecognition.interimResults = true;
 
         mockRecognition.onresult = (event) => {
-            let fullTranscript = '';
+            let finalTranscript = '';
+            let interimTranscript = '';
+            
+            // Process only new results starting from event.resultIndex
             for (let i = event.resultIndex; i < event.results.length; i++) {
-                fullTranscript += event.results[i][0].transcript;
+                const transcript = event.results[i][0].transcript;
+                
+                if (event.results[i].isFinal) {
+                    // Accumulate final results only
+                    finalTranscript += transcript + ' ';
+                } else {
+                    // Interim results shown but not stored
+                    interimTranscript += transcript;
+                }
             }
-            mockCurrentAnswer = fullTranscript;
-
+            
+            // Add new final results to the accumulated answer
+            if (finalTranscript.trim()) {
+                mockCurrentAnswer = (mockCurrentAnswer + ' ' + finalTranscript).trim();
+            }
+            
+            // Display: final accumulated + interim (for live preview)
+            const displayTranscript = (mockCurrentAnswer + ' ' + interimTranscript).trim();
+            
             if (mockSettings.showTranscription) {
-                $('mock-live-answer').textContent = mockCurrentAnswer;
+                $('mock-live-answer').textContent = displayTranscript;
             }
 
-            const words = mockCurrentAnswer.trim().split(/\s+/);
+            const words = displayTranscript.trim().split(/\s+/);
             const count = words.length;
             $('mock-word-count').textContent = `${count} words`;
             $('mock-word-count').className = 'mock-word-count ' + (count < 10 ? 'words-low' : count < 30 ? 'words-mid' : 'words-high');
@@ -720,27 +821,71 @@ A: Um, yeah, I guess I was wondering about the team structure? Like, how big is 
         window.ttsEngine.stop();
         const sessionData = window.sessionManager.endSession();
         mockSessionReport = window.mockReport.generate(sessionData);
-        renderMockResults(mockSessionReport, sessionData);
         goToStep('mockResults');
+        // Wait for DOM layout to complete before rendering charts
+        setTimeout(() => {
+            renderMockResults(mockSessionReport, sessionData);
+        }, 150);
     }
 
     function renderMockResults(report, sessionData) {
+        // Overall score gauge
         window.chartRenderer.drawGauge('mock-score-gauge', report.overallScore);
         animateCounter($('mock-score-number'), report.overallScore, 1500);
 
         const verdictEl = $('mock-score-verdict');
         verdictEl.textContent = report.verdict;
-        verdictEl.style.color = report.overallScore >= 70 ? 'var(--success)' : report.overallScore >= 45 ? 'var(--warning)' : 'var(--danger)';
+        verdictEl.style.color = report.overallScore >= 75 ? 'var(--success)' : report.overallScore >= 55 ? 'var(--warning)' : 'var(--danger)';
+
+        // Score trend label
+        const trendEl = $('score-trend');
+        if (trendEl) {
+            const trendClass = report.trendLabel.includes('Improving') ? 'improving' : report.trendLabel.includes('Declining') ? 'declining' : 'consistent';
+            trendEl.className = 'score-trend ' + trendClass;
+            trendEl.innerHTML = `${report.trendLabel} <span style="font-size:0.75rem;opacity:0.7">(${report.improvingQuestions}↑ / ${report.decliningQuestions}↓)</span>`;
+        }
+
+        // Performance badges
+        const badgesRow = $('badges-row');
+        if (badgesRow) {
+            badgesRow.innerHTML = '';
+            (report.badges || []).forEach(badge => {
+                const el = document.createElement('span');
+                el.className = `badge-item badge-${badge.color}`;
+                el.innerHTML = `${badge.icon} ${badge.label}`;
+                badgesRow.appendChild(el);
+            });
+        }
 
         // Stats
         $('mock-stat-questions').textContent = report.questionCount;
         $('mock-stat-duration').textContent = report.durationMin + 'm';
         $('mock-stat-words').textContent = report.avgWords;
         $('mock-stat-answers').textContent = report.answeredCount;
+        if ($('mock-stat-filler')) $('mock-stat-filler').textContent = report.avgFillerRate + '%';
 
-        // Dimension cards
+        // Sparkline for questions trend
+        if (report.scoreTrend && report.scoreTrend.length > 1) {
+            window.chartRenderer.drawSparkline('mock-questions-spark', report.scoreTrend, '#3b82f6');
+        }
+
+        // Best/Worst highlights
+        if (report.bestAnswer) {
+            const bestQ = $('best-question');
+            const bestS = $('best-score');
+            if (bestQ) bestQ.textContent = report.bestAnswer.question.substring(0, 80) + (report.bestAnswer.question.length > 80 ? '...' : '');
+            if (bestS) bestS.textContent = report.bestAnswer.score + '/100';
+        }
+        if (report.worstAnswer) {
+            const worstQ = $('worst-question');
+            const worstS = $('worst-score');
+            if (worstQ) worstQ.textContent = report.worstAnswer.question.substring(0, 80) + (report.worstAnswer.question.length > 80 ? '...' : '');
+            if (worstS) worstS.textContent = report.worstAnswer.score + '/100';
+        }
+
+        // Dimension cards (4 dimensions)
         function setDimensionCard(id, barId, score) {
-            const color = score >= 70 ? 'var(--success)' : score >= 45 ? 'var(--warning)' : 'var(--danger)';
+            const color = score >= 75 ? 'var(--success)' : score >= 55 ? 'var(--warning)' : 'var(--danger)';
             $(id).textContent = score;
             $(id).style.color = color;
             $(barId).style.width = score + '%';
@@ -749,26 +894,47 @@ A: Um, yeah, I guess I was wondering about the team structure? Like, how big is 
         setDimensionCard('mock-dim-speech', 'mock-dim-speech-bar', report.avgSpeech);
         setDimensionCard('mock-dim-structure', 'mock-dim-structure-bar', report.avgStructure);
         setDimensionCard('mock-dim-confidence', 'mock-dim-confidence-bar', report.avgConfidence);
+        setDimensionCard('mock-dim-relevance', 'mock-dim-relevance-bar', report.avgRelevance);
 
-        // Score per question bar chart
+        // Score trend line chart - Score Trend Across Questions
         const qLabels = report.answerBreakdown.map((_, i) => 'Q' + (i + 1));
         const qScores = report.answerBreakdown.map(a => a.score);
-        window.chartRenderer.drawBarChart('mock-score-chart', qLabels, qScores, {
-            colors: qScores.map(v => v >= 70 ? 'var(--success)' : v >= 45 ? 'var(--warning)' : 'var(--danger)')
-        });
+        if (report.scoreTrend && report.scoreTrend.length > 0) {
+            try {
+                window.chartRenderer.drawLineChart('mock-trend-chart', qLabels, report.scoreTrend);
+            } catch (e) {
+                console.error('Error rendering score trend chart:', e);
+            }
+        }
 
-        // Dimension per question chart (grouped bar)
-        const speechVals = report.answerBreakdown.map(a => a.speechScore);
-        const structVals = report.answerBreakdown.map(a => a.structureScore);
-        const confVals = report.answerBreakdown.map(a => a.confidenceScore);
+        // Performance Radar chart
+        try {
+            window.chartRenderer.drawRadarChart('mock-radar-chart',
+                ['Speech', 'Structure', 'Confidence', 'Relevance'],
+                [report.avgSpeech, report.avgStructure, report.avgConfidence, report.avgRelevance]
+            );
+        } catch (e) {
+            console.error('Error rendering performance radar chart:', e);
+        }
+
+        // Score Per Question bar chart
+        try {
+            window.chartRenderer.drawBarChart('mock-score-chart', qLabels, qScores, {
+                colors: qScores.map(v => v >= 75 ? '#10b981' : v >= 55 ? '#f59e0b' : '#ef4444')
+            });
+        } catch (e) {
+            console.error('Error rendering score per question chart:', e);
+        }
+
+        // Dimension horizontal bar chart
         window.chartRenderer.drawHorizontalBarChart('mock-dimension-chart',
-            ['Speech', 'Structure', 'Confidence'],
-            [report.avgSpeech, report.avgStructure, report.avgConfidence]
+            ['Speech', 'Structure', 'Confidence', 'Relevance'],
+            [report.avgSpeech, report.avgStructure, report.avgConfidence, report.avgRelevance]
         );
 
-        // Quick insights bar above accordion
+        // Quick highlights (top 3 weaknesses) above accordion
         const weaknessContainer = $('mock-weakness-list');
-        weaknessContainer.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:8px;">Quick highlights across all answers:</p>';
+        weaknessContainer.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:12px;font-weight:600;">Top Issues to Address:</p>';
         report.weaknesses.slice(0, 3).forEach((w, i) => {
             const div = document.createElement('div');
             div.className = 'weakness-item';
@@ -776,7 +942,7 @@ A: Um, yeah, I guess I was wondering about the team structure? Like, how big is 
                 <div class="weakness-rank">${i + 1}</div>
                 <div class="weakness-content">
                     <div class="weakness-title">${escapeHtml(w.text)}</div>
-                    <div class="weakness-desc">Affects Qs: ${w.questionsAffected.join(', ')}</div>
+                    <div class="weakness-desc">${w.icon} ${w.category} · Affects Qs: ${w.questionsAffected.join(', ')}</div>
                     <div class="weakness-impact impact-${w.impact}">${w.impact.toUpperCase()} IMPACT</div>
                 </div>
             `;
@@ -788,15 +954,19 @@ A: Um, yeah, I guess I was wondering about the team structure? Like, how big is 
         accordion.innerHTML = '';
         report.answerBreakdown.forEach((a, i) => {
             const details = document.createElement('details');
-            const scoreColor = a.score >= 70 ? 'var(--success)' : a.score >= 45 ? 'var(--warning)' : 'var(--danger)';
+            const scoreColor = a.score >= 72 ? 'var(--success)' : a.score >= 45 ? 'var(--warning)' : 'var(--danger)';
+            const typeLabel = a.questionType ? a.questionType.charAt(0).toUpperCase() + a.questionType.slice(1) : 'General';
             details.innerHTML = `
                 <summary>
                     <span style="display:flex;flex-direction:column;gap:2px;">
-                        <span>Question ${i + 1}</span>
-                        <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">${escapeHtml(a.question.substring(0, 55))}${a.question.length > 55 ? '...' : ''}</span>
+                        <span style="display:flex;align-items:center;gap:8px;">
+                            <span style="font-size:0.7rem;padding:2px 8px;background:rgba(59,130,246,0.15);color:var(--accent-blue);border-radius:var(--radius-full);">${typeLabel}</span>
+                            <span>Q${i + 1}</span>
+                        </span>
+                        <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;max-width:320px;">${escapeHtml(a.question.substring(0, 60))}${a.question.length > 60 ? '...' : ''}</span>
                     </span>
                     <span style="display:flex;align-items:center;gap:12px;">
-                        <span class="qa-score" style="color:${scoreColor};font-weight:700;">${a.score}/100</span>
+                        <span class="qa-score" style="color:${scoreColor};font-weight:700;">${a.score}</span>
                         <span style="font-size:0.8rem;color:${scoreColor};">${a.verdict}</span>
                     </span>
                 </summary>
@@ -805,18 +975,37 @@ A: Um, yeah, I guess I was wondering about the team structure? Like, how big is 
                         <div class="qa-mini-score">🗣️ Speech: <span style="color:${a.speechScore >= 70 ? 'var(--success)' : a.speechScore >= 45 ? 'var(--warning)' : 'var(--danger)'}">${a.speechScore}</span></div>
                         <div class="qa-mini-score">📋 Structure: <span style="color:${a.structureScore >= 70 ? 'var(--success)' : a.structureScore >= 45 ? 'var(--warning)' : 'var(--danger)'}">${a.structureScore}</span></div>
                         <div class="qa-mini-score">💪 Confidence: <span style="color:${a.confidenceScore >= 70 ? 'var(--success)' : a.confidenceScore >= 45 ? 'var(--warning)' : 'var(--danger)'}">${a.confidenceScore}</span></div>
+                        <div class="qa-mini-score">🎯 Relevance: <span style="color:${a.relevanceScore >= 70 ? 'var(--success)' : a.relevanceScore >= 45 ? 'var(--warning)' : 'var(--danger)'}">${a.relevanceScore}</span></div>
                         <div class="qa-mini-score">📖 Words: <span>${a.wordCount}</span></div>
+                        ${a.speech.fillerRate > 0 ? `<div class="qa-mini-score">🗣️ Fillers: <span style="color:var(--warning)">${a.speech.fillerRate}%</span></div>` : ''}
                     </div>
                     <div class="qa-question"><strong>Question:</strong> ${escapeHtml(a.question)}</div>
                     <div class="qa-answer"><strong>Your Answer:</strong> ${a.answer ? escapeHtml(a.answer) : '<em>No answer recorded</em>'}</div>
-                    ${a.insights && a.insights.length > 0 ? `<div style="margin-bottom:10px;">${a.insights.map(ins => `<span class="qa-insight ${ins.type}">${escapeHtml(ins.text)}</span>`).join('')}</div>` : ''}
-                    ${a.strengths && a.strengths.length > 0 ? `<div class="qa-tags">${a.strengths.map(s => `<span class="qa-tag good">${escapeHtml(s.substring(0, 40))}</span>`).join('')}</div>` : ''}
-                    ${a.improvements && a.improvements.length > 0 ? `<div class="qa-tags" style="margin-top:6px;">${a.improvements.map(s => `<span class="qa-tag improve">${escapeHtml(s.substring(0, 40))}</span>`).join('')}</div>` : ''}
-                    ${a.oneLiner ? `<div class="qa-one-liner" style="margin-top:10px;font-size:0.85rem;color:var(--text-secondary);font-style:italic;">"${escapeHtml(a.oneLiner)}"</div>` : ''}
+                    ${a.insights && a.insights.length > 0 ? `<div style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:6px;">${a.insights.map(ins => `<span class="qa-insight ${ins.type}">${ins.icon} ${escapeHtml(ins.text)}</span>`).join('')}</div>` : ''}
+                    ${a.keyMoment && a.keyMoment !== 'Average response quality' ? `<div style="margin-top:8px;padding:8px 12px;background:rgba(59,130,246,0.08);border-radius:var(--radius-sm);font-size:0.82rem;color:var(--accent-blue);font-style:italic;">💡 Key moment: ${escapeHtml(a.keyMoment)}</div>` : ''}
+                    ${a.strengths && a.strengths.length > 0 ? `<div class="qa-tags">${a.strengths.map(s => `<span class="qa-tag good">✓ ${escapeHtml(s.substring(0, 50))}</span>`).join('')}</div>` : ''}
+                    ${a.improvements && a.improvements.length > 0 ? `<div class="qa-tags" style="margin-top:6px;">${a.improvements.map(s => `<span class="qa-tag improve">→ ${escapeHtml(s.substring(0, 50))}</span>`).join('')}</div>` : ''}
+                    ${a.oneLiner ? `<div class="qa-one-liner" style="margin-top:10px;font-size:0.85rem;color:var(--text-secondary);font-style:italic;padding:10px;background:var(--bg-surface);border-radius:var(--radius-sm);border-left:3px solid var(--accent-blue);">"${escapeHtml(a.oneLiner)}"</div>` : ''}
                 </div>
             `;
             accordion.appendChild(details);
         });
+
+        // Strengths grid
+        const strengthsGrid = $('mock-strengths-list');
+        if (strengthsGrid) {
+            strengthsGrid.innerHTML = '';
+            (report.strengths || []).forEach(s => {
+                const div = document.createElement('div');
+                div.className = 'strength-item';
+                div.innerHTML = `
+                    <span class="strength-icon">${s.icon || '✨'}</span>
+                    <span class="strength-text">${escapeHtml(s.text)}</span>
+                    <span class="strength-count">×${s.count}</span>
+                `;
+                strengthsGrid.appendChild(div);
+            });
+        }
 
         // Weakness detail list
         const weaknessDetail = $('mock-weakness-detail');
@@ -830,12 +1019,24 @@ A: Um, yeah, I guess I was wondering about the team structure? Like, how big is 
                 div.innerHTML = `
                     <div class="weakness-rank">${i + 1}</div>
                     <div class="weakness-content">
-                        <div class="weakness-title">${escapeHtml(w.text)}</div>
-                        <div class="weakness-desc">Category: ${escapeHtml(w.category)} · Affects Qs: ${w.questionsAffected.join(', ')}</div>
+                        <div class="weakness-title">${w.icon} ${escapeHtml(w.text)}</div>
+                        <div class="weakness-desc">${w.category} · Affects Qs: ${w.questionsAffected.join(', ')} · Avg score: ${w.avgScore}</div>
                         <div class="weakness-impact impact-${w.impact}">${w.impact.toUpperCase()} IMPACT</div>
                     </div>
                 `;
                 weaknessDetail.appendChild(div);
+            });
+        }
+
+        // Comparative insights
+        const insightsContainer = $('mock-insights');
+        if (insightsContainer) {
+            insightsContainer.innerHTML = '';
+            (report.comparativeInsights || []).forEach(insight => {
+                const div = document.createElement('div');
+                div.className = 'insight-item';
+                div.innerHTML = `<span class="insight-icon">💡</span><span class="insight-text">${escapeHtml(insight)}</span>`;
+                insightsContainer.appendChild(div);
             });
         }
 
@@ -846,13 +1047,7 @@ A: Um, yeah, I guess I was wondering about the team structure? Like, how big is 
             const div = document.createElement('div');
             div.className = 'improvement-item';
             div.innerHTML = `
-                <div class="improvement-title">${escapeHtml(item.title)}</div>
-                <div class="improvement-desc">${escapeHtml(item.description)}</div>
-                <div class="improvement-exercise"><strong>Practice Exercise:</strong> ${escapeHtml(item.exercise)}</div>
-            `;
-            impContainer.appendChild(div);
-        });
-    }
+                <div class="improvement-title">${item.icon || '📋'} ${escapeHtml(item.title)} <span style="font-size:0.7rem;padding:2px 8px;border-radius:var(--radius-full);margin-left:8px;text-transform:uppercase;background:${item.priority === 'high' ? 'rgba(239,68,68,0.15)' : item.priority === 'medium' ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)'};color:${item.priority === 'high' ? 'var(--danger)' : item.priority === 'medium' ? 'var(--warning)' : 'var(--success)'}">${item.priority}</span></div>
                 <div class="improvement-desc">${escapeHtml(item.description)}</div>
                 <div class="improvement-exercise"><strong>Practice Exercise:</strong> ${escapeHtml(item.exercise)}</div>
             `;
@@ -896,7 +1091,7 @@ A: Um, yeah, I guess I was wondering about the team structure? Like, how big is 
         if (mockIsRecording) {
             stopMockListening();
         } else {
-            startMockListening();
+            startMockListening(mockCurrentAnswer);
         }
     });
 
