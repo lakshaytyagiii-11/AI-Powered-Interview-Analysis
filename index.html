@@ -12,6 +12,243 @@
 </head>
 <body>
 
+    <!-- ====== MOCK INTERVIEW SETUP ====== -->
+    <section id="mock-setup-section" class="step">
+        <nav class="navbar">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" stroke="url(#lg4)" stroke-width="2.5"/><path d="M12 21V11l10 5-10 5z" fill="url(#lg4)"/><defs><linearGradient id="lg4" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs></svg>
+                <span>InterviewIQ</span>
+            </div>
+            <button id="mock-back-btn" class="btn btn-ghost btn-sm">← Back</button>
+        </nav>
+
+        <div class="setup-container">
+            <div class="setup-header">
+                <h2>AI Mock Interview</h2>
+                <p>Configure your practice session. All responses are analyzed in real-time.</p>
+            </div>
+
+            <!-- Role Selection -->
+            <div class="setup-block">
+                <h3 class="block-title"><span class="step-number">1</span> Select Job Role</h3>
+                <div class="role-grid" id="mock-role-grid">
+                    <button class="role-card" data-role="software-engineer"><span class="role-icon">💻</span><span class="role-name">Software Engineer</span></button>
+                    <button class="role-card" data-role="product-manager"><span class="role-icon">📦</span><span class="role-name">Product Manager</span></button>
+                    <button class="role-card" data-role="data-analyst"><span class="role-icon">📊</span><span class="role-name">Data Analyst</span></button>
+                    <button class="role-card" data-role="marketing-manager"><span class="role-icon">📣</span><span class="role-name">Marketing Manager</span></button>
+                    <button class="role-card" data-role="ux-designer"><span class="role-icon">🎨</span><span class="role-name">UX Designer</span></button>
+                    <button class="role-card" data-role="general"><span class="role-icon">🌐</span><span class="role-name">General / Other</span></button>
+                </div>
+                <div class="validation-error" id="mock-role-error">Please select a job role</div>
+            </div>
+
+            <!-- Experience Level -->
+            <div class="setup-block">
+                <h3 class="block-title"><span class="step-number">2</span> Select Experience Level</h3>
+                <div class="experience-grid" id="experience-grid">
+                    <button class="experience-card" data-exp="junior">
+                        <span class="exp-icon">🌱</span>
+                        <span class="exp-name">Junior (0-2 yrs)</span>
+                        <span class="exp-desc">Entry to mid-level positions</span>
+                    </button>
+                    <button class="experience-card" data-exp="mid">
+                        <span class="exp-icon">⚡</span>
+                        <span class="exp-name">Mid-Level (3-5 yrs)</span>
+                        <span class="exp-desc">Experienced professional</span>
+                    </button>
+                    <button class="experience-card" data-exp="senior">
+                        <span class="exp-icon">🚀</span>
+                        <span class="exp-name">Senior (5+ yrs)</span>
+                        <span class="exp-desc">Leadership & strategy</span>
+                    </button>
+                </div>
+                <div class="validation-error" id="mock-exp-error">Please select an experience level</div>
+            </div>
+
+            <!-- Question Count -->
+            <div class="setup-block">
+                <h3 class="block-title"><span class="step-number">3</span> Number of Questions</h3>
+                <div class="question-count-row">
+                    <span class="question-count-label">Questions: <strong id="mock-count-display">10</strong></span>
+                    <input type="range" id="mock-count-slider" min="3" max="50" value="10" class="question-range">
+                </div>
+            </div>
+
+            <!-- API Key -->
+            <div class="setup-block">
+                <h3 class="block-title"><span class="step-number">4</span> AI API Key (Optional — Free tier available)</h3>
+                <input type="password" id="mock-api-key" class="api-key-input" placeholder="gsk_... (Groq) or AIza... (Gemini)" autocomplete="off">
+                <div class="api-key-note">
+                    Without an API key, built-in question bank and local feedback are used.<br>
+                    <strong>Free keys:</strong>
+                    <a href="https://console.groq.com" target="_blank" class="api-link">Groq Console</a> (Llama, no cost) ·
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="api-link">Google AI Studio</a> (Gemini, free tier)
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="setup-block">
+                <h3 class="block-title"><span class="step-number">5</span> Settings</h3>
+                <div class="settings-toggles">
+                    <label class="toggle-row">
+                        <input type="checkbox" id="mock-read-aloud" checked>
+                        <span>Read questions aloud using text-to-speech</span>
+                    </label>
+                    <label class="toggle-row">
+                        <input type="checkbox" id="mock-show-transcript" checked>
+                        <span>Show live transcription while speaking</span>
+                    </label>
+                    <label class="toggle-row">
+                        <input type="checkbox" id="mock-auto-advance">
+                        <span>Auto-advance to next question after feedback</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Start Button -->
+            <button id="start-mock-btn" class="btn btn-primary btn-lg btn-full">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M6 4l12 6-12 6V4z" fill="currentColor"/></svg>
+                Begin Mock Interview
+            </button>
+        </div>
+    </section>
+
+    <!-- ====== MOCK INTERVIEW ====== -->
+    <section id="mock-interview-section" class="step">
+        <div class="mock-progress-bar-wrapper">
+            <div class="progress-bar">
+                <div class="progress-fill" id="mock-progress-fill"></div>
+            </div>
+            <div class="mock-progress-text" id="mock-progress-text">Question 1 of 6</div>
+        </div>
+
+        <div class="mock-interview-container">
+            <div class="mock-interview-main">
+                <div class="interviewer-orb" id="interviewer-orb">
+                    <div class="orb-inner">🤖</div>
+                    <div class="orb-ring"></div>
+                </div>
+                <div class="mock-question-card" id="mock-question-card">
+                    <div class="question-badge">Question <span id="mock-q-num">1</span></div>
+                    <div class="question-text" id="mock-question-text">Tell me about yourself and your background.</div>
+                </div>
+                <div class="mock-word-count" id="mock-word-count">0 words</div>
+                <div class="mock-live-answer" id="mock-live-answer"></div>
+            </div>
+
+            <div class="mock-feedback-card" id="mock-feedback-card">
+                <div class="feedback-header">
+                    <div class="feedback-score-badge" id="mock-fb-score">Score: 75</div>
+                    <div class="verdict-label" id="mock-verdict">Good Response</div>
+                </div>
+                <div class="feedback-strengths">
+                    <div class="fb-section-title">✓ Strengths</div>
+                    <ul id="mock-strengths"></ul>
+                </div>
+                <div class="feedback-improvements">
+                    <div class="fb-section-title">→ Areas to Improve</div>
+                    <ul id="mock-improvements"></ul>
+                </div>
+                <div class="feedback-one-liner" id="mock-one-liner"></div>
+            </div>
+
+            <div class="mock-controls">
+                <button id="mock-replay-btn" class="btn btn-ghost btn-sm" title="Replay question">🔁 Replay</button>
+                <button id="mock-mic-btn" class="mock-mic-btn" title="Start/Stop recording">
+                    <span class="mock-mic-icon">🎙️</span>
+                </button>
+                <button id="mock-submit-btn" class="btn btn-primary" disabled>Submit Answer</button>
+            </div>
+
+            <div class="mock-session-controls">
+                <button id="mock-pause-btn" class="btn btn-ghost btn-sm">⏸ Pause</button>
+                <button id="mock-next-btn" class="btn btn-ghost btn-sm" style="display:none">Next Question →</button>
+                <button id="mock-end-btn" class="btn btn-ghost btn-sm" style="color:var(--danger)">End Early</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== MOCK RESULTS ====== -->
+    <section id="mock-results-section" class="step">
+        <nav class="navbar">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" stroke="url(#lg5)" stroke-width="2.5"/><path d="M12 21V11l10 5-10 5z" fill="url(#lg5)"/><defs><linearGradient id="lg5" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs></svg>
+                <span>InterviewIQ</span>
+            </div>
+            <button id="mock-new-btn" class="btn btn-ghost btn-sm">+ New Mock Interview</button>
+        </nav>
+
+        <div class="dashboard-container">
+            <div class="score-hero">
+                <canvas id="mock-score-gauge" width="220" height="220"></canvas>
+                <div class="score-number" id="mock-score-number">0</div>
+                <div class="score-label">Mock Interview Score</div>
+                <div class="score-verdict" id="mock-score-verdict"></div>
+            </div>
+
+            <div class="session-stats-row" id="mock-stats-row">
+                <div class="stat-card"><div class="stat-card-icon">📝</div><div class="stat-card-value" id="mock-stat-questions">—</div><div class="stat-card-label">Questions</div></div>
+                <div class="stat-card"><div class="stat-card-icon">⏱️</div><div class="stat-card-value" id="mock-stat-duration">—</div><div class="stat-card-label">Duration</div></div>
+                <div class="stat-card"><div class="stat-card-icon">📖</div><div class="stat-card-value" id="mock-stat-words">—</div><div class="stat-card-label">Avg Words</div></div>
+                <div class="stat-card"><div class="stat-card-icon">🎯</div><div class="stat-card-value" id="mock-stat-answers">—</div><div class="stat-card-label">Answered</div></div>
+            </div>
+
+            <!-- Core Dimension Scores -->
+            <div class="section-block">
+                <h2 class="section-title">📊 Performance Breakdown</h2>
+                <div class="mock-dimension-cards">
+                    <div class="dimension-card">
+                        <div class="dimension-header"><span class="dimension-icon">🗣️</span><span>Speech Quality</span></div>
+                        <div class="dimension-score" id="mock-dim-speech">—</div>
+                        <div class="dimension-bar"><div class="dimension-fill" id="mock-dim-speech-bar" style="width:0%"></div></div>
+                        <div class="dimension-desc">Filler words, pacing, clarity</div>
+                    </div>
+                    <div class="dimension-card">
+                        <div class="dimension-header"><span class="dimension-icon">📋</span><span>Answer Structure</span></div>
+                        <div class="dimension-score" id="mock-dim-structure">—</div>
+                        <div class="dimension-bar"><div class="dimension-fill" id="mock-dim-structure-bar" style="width:0%"></div></div>
+                        <div class="dimension-desc">STAR method, examples, depth</div>
+                    </div>
+                    <div class="dimension-card">
+                        <div class="dimension-header"><span class="dimension-icon">💪</span><span>Confidence</span></div>
+                        <div class="dimension-score" id="mock-dim-confidence">—</div>
+                        <div class="dimension-bar"><div class="dimension-fill" id="mock-dim-confidence-bar" style="width:0%"></div></div>
+                        <div class="dimension-desc">Assertive language, conviction</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="charts-grid">
+                <div class="chart-card"><h3>Score Per Question</h3><canvas id="mock-score-chart" width="500" height="220"></canvas></div>
+                <div class="chart-card"><h3>Speech vs Structure vs Confidence</h3><canvas id="mock-dimension-chart" width="500" height="220"></canvas></div>
+            </div>
+
+            <!-- Question-by-Question Review -->
+            <div class="section-block">
+                <h2 class="section-title">📝 Detailed Question Review</h2>
+                <div id="mock-weakness-list" class="weakness-list" style="margin-bottom:16px;"></div>
+                <div class="question-accordion" id="mock-question-accordion"></div>
+            </div>
+
+            <!-- Strengths & Weaknesses Summary -->
+            <div class="section-block">
+                <h2 class="section-title">⚠️ Key Areas to Improve</h2>
+                <div id="mock-weakness-detail" class="weakness-list"></div>
+            </div>
+
+            <div class="section-block">
+                <h2 class="section-title">🗺️ Improvement Plan</h2>
+                <div id="mock-improvement-plan" class="improvement-plan"></div>
+            </div>
+
+            <div class="download-section">
+                <button id="mock-download-btn" class="btn btn-primary btn-lg">📄 Download Report</button>
+                <button id="transcript-analyze-btn" class="btn btn-ghost btn-lg" style="margin-top:12px">🔍 Analyze This Transcript</button>
+            </div>
+        </div>
+    </section>
+
     <!-- ====== STEP 1: LANDING ====== -->
     <section id="landing-section" class="step active">
         <nav class="navbar">
@@ -25,10 +262,15 @@
             <div class="hero-badge">🎯 AI-Powered Interview Analysis</div>
             <h1 class="hero-title">Know Exactly Why You<br><span class="gradient-text">Didn't Get The Job</span></h1>
             <p class="hero-subtitle">Upload your interview transcript and receive a detailed, moment-by-moment breakdown of what went wrong — with precise, actionable feedback to ace your next one.</p>
-            <button id="get-started-btn" class="btn btn-primary btn-lg">
-                Get Started
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 10h10m0 0l-4-4m4 4l-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
+            <div class="hero-buttons">
+                <button id="get-started-btn" class="btn btn-primary btn-lg">
+                    Analyze Transcript
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 10h10m0 0l-4-4m4 4l-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button id="mock-interview-btn" class="btn btn-ghost btn-lg">
+                    🎙️ AI Mock Interview
+                </button>
+            </div>
 
             <div class="hero-stats">
                 <div class="stat-item"><span class="stat-value">6</span><span class="stat-label">Analysis Dimensions</span></div>
@@ -245,6 +487,12 @@ A: I think my biggest weakness is probably time management..."></textarea>
     <script src="js/role-matcher.js"></script>
     <script src="js/report-generator.js"></script>
     <script src="js/transcriber.js"></script>
+    <script src="js/question-bank.js"></script>
+    <script src="js/tts-engine.js"></script>
+    <script src="js/live-scorer.js"></script>
+    <script src="js/session-manager.js"></script>
+    <script src="js/mock-interviewer.js"></script>
+    <script src="js/mock-report.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
