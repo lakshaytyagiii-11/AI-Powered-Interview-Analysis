@@ -3,21 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InterviewIQ — Post-Interview Rejection Analysis</title>
-    <meta name="description" content="Upload your interview recording and receive a detailed AI-powered breakdown of why you didn't get the job, with actionable feedback and a targeted improvement plan.">
+    <title>InterviewAnalysis — Post-Interview Rejection Analysis</title>
+    <meta name="description" content="InterviewAnalysis is an AI-powered mock interview and interview analysis platform designed to help candidates improve their communication, confidence, and interview performance. The application allows users to either practice live mock interviews or upload interview transcripts for detailed analysis.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="index.css">
 </head>
 <body>
-
-    <!-- ====== MOCK INTERVIEW SETUP ====== -->
     <section id="mock-setup-section" class="step">
         <nav class="navbar">
             <div class="logo">
                 <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" stroke="url(#lg4)" stroke-width="2.5"/><path d="M12 21V11l10 5-10 5z" fill="url(#lg4)"/><defs><linearGradient id="lg4" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs></svg>
-                <span>InterviewIQ</span>
+                <span>MockInterview</span>
             </div>
             <button id="mock-back-btn" class="btn btn-ghost btn-sm">← Back</button>
         </nav>
@@ -316,80 +314,170 @@
         </div>
     </section>
 
-    <!-- ====== STEP 1: LANDING ====== -->
-    <section id="landing-section" class="step active">
-        <nav class="navbar">
-            <div class="logo">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" stroke="url(#lg1)" stroke-width="2.5"/><path d="M12 21V11l10 5-10 5z" fill="url(#lg1)"/><defs><linearGradient id="lg1" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs></svg>
-                <span>InterviewIQ</span>
-            </div>
-        </nav>
+   <!-- ====== STEP 1: LANDING ====== -->
+<section id="landing-section" class="step active">
 
-        <main class="hero">
-            <div class="hero-badge">🎯 AI-Powered Interview Analysis</div>
-            <h1 class="hero-title">Know Exactly Why You<br><span class="gradient-text">Didn't Get The Job</span></h1>
-            <p class="hero-subtitle">Upload your interview transcript and receive a detailed, moment-by-moment breakdown of what went wrong — with precise, actionable feedback to ace your next one.</p>
-            <div class="hero-buttons">
-                <button id="get-started-btn" class="btn btn-primary btn-lg">
-                    Analyze Transcript
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 10h10m0 0l-4-4m4 4l-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </button>
-                <button id="mock-interview-btn" class="btn btn-ghost btn-lg">
-                    🎙️ AI Mock Interview
-                </button>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="logo">
+            <img src="images/ppimage.jpeg" class="navbar-logo" alt="Lakshay Tyagi Logo">
+            <span>InterviewAnalysis</span>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <main class="hero">
+        <div class="hero-badge">🎯 AI-Powered Interview Analysis</div>
+
+        <h1 class="hero-title">
+            Know Exactly Why You<br>
+            <span class="gradient-text">Didn't Get The Job</span>
+        </h1>
+
+        <p class="hero-subtitle">
+            Upload your interview transcript and receive a detailed,
+            moment-by-moment breakdown of what went wrong —
+            with precise, actionable feedback to ace your next one.
+        </p>
+
+        <div class="hero-buttons">
+            <button id="get-started-btn" class="btn btn-primary btn-lg">
+                Analyze Transcript
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M5 10h10m0 0l-4-4m4 4l-4 4"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"/>
+                </svg>
+            </button>
+
+            <button id="mock-interview-btn" class="btn btn-ghost btn-lg">
+                🎙️ AI Mock Interview
+            </button>
+        </div>
+
+        <div class="hero-stats">
+            <div class="stat-item">
+                <span class="stat-value">6</span>
+                <span class="stat-label">Analysis Dimensions</span>
             </div>
 
-            <div class="hero-stats">
-                <div class="stat-item"><span class="stat-value">6</span><span class="stat-label">Analysis Dimensions</span></div>
-                <div class="stat-divider"></div>
-                <div class="stat-item"><span class="stat-value">100%</span><span class="stat-label">Client-Side</span></div>
-                <div class="stat-divider"></div>
-                <div class="stat-item"><span class="stat-value">∞</span><span class="stat-label">Free Analyses</span></div>
-            </div>
-        </main>
+            <div class="stat-divider"></div>
 
-        <section class="features" id="features">
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🗣️</div>
-                    <h3>Speech Analysis</h3>
-                    <p>Detect filler words, pacing issues, and speaking patterns that undermine your credibility.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📋</div>
-                    <h3>Structure Evaluation</h3>
-                    <p>Evaluate answer organization using STAR framework, clarity, depth, and relevance metrics.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📉</div>
-                    <h3>Confidence Detection</h3>
-                    <p>Identify hesitation markers, hedging language, and confidence drops at specific questions.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🎯</div>
-                    <h3>Role Alignment</h3>
-                    <p>Map responses against ideal expectations for your target role and highlight gaps.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3>Weakness Ranking</h3>
-                    <p>Rank your weaknesses by impact on hiring decisions so you fix what matters most.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🗺️</div>
-                    <h3>Improvement Plan</h3>
-                    <p>Get a targeted action plan with specific exercises to improve before your next interview.</p>
-                </div>
+            <div class="stat-item">
+                <span class="stat-value">100%</span>
+                <span class="stat-label">Client-Side</span>
             </div>
-        </section>
+
+            <div class="stat-divider"></div>
+
+            <div class="stat-item">
+                <span class="stat-value">∞</span>
+                <span class="stat-label">Free Analyses</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- FEATURES -->
+    <section class="features" id="features">
+
+        <div class="features-grid">
+
+            <div class="feature-card">
+                <div class="feature-icon">🗣️</div>
+                <h3>Speech Analysis</h3>
+                <p>
+                    Detect filler words, pacing issues, and speaking
+                    patterns that undermine your credibility.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📋</div>
+                <h3>Structure Evaluation</h3>
+                <p>
+                    Evaluate answer organization using STAR framework,
+                    clarity, depth, and relevance metrics.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📉</div>
+                <h3>Confidence Detection</h3>
+                <p>
+                    Identify hesitation markers, hedging language,
+                    and confidence drops at specific questions.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>Role Alignment</h3>
+                <p>
+                    Map responses against ideal expectations for your
+                    target role and highlight gaps.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Weakness Ranking</h3>
+                <p>
+                    Rank your weaknesses by impact on hiring decisions
+                    so you fix what matters most.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🗺️</div>
+                <h3>Improvement Plan</h3>
+                <p>
+                    Get a targeted action plan with specific exercises
+                    to improve before your next interview.
+                </p>
+            </div>
+
+        </div>
     </section>
+
+    <!-- PHOTO AT END -->
+    <div class="end-photo">
+
+        <img src="images/ppimage.jpeg" alt="Lakshay Tyagi">
+
+        <h3>Lakshay Tyagi</h3>
+        <p class="creator-contact">
+    📧 
+    <a href="mailto:lakshayty11@gmail.com">
+        lakshayty11@gmail.com
+    </a>
+</p>
+
+<p class="creator-contact">
+    📱 
+    <a href="tel:+918750877481">
+        +91 8750877481
+    </a>
+</p>
+
+<p class="creator-contact">
+    💻 
+    <a href="https://github.com/lakshaytyagiii-11" target="_blank">
+        GithubID
+    </a>
+</p>
+
+    </div>
+
+</section>
 
     <!-- ====== STEP 2: SETUP ====== -->
     <section id="setup-section" class="step">
         <nav class="navbar">
             <div class="logo">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" stroke="url(#lg2)" stroke-width="2.5"/><path d="M12 21V11l10 5-10 5z" fill="url(#lg2)"/><defs><linearGradient id="lg2" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs></svg>
-                <span>InterviewIQ</span>
+                 <img src="images/ppimage.jpeg" class="navbar-logo" alt="Logo">
+                 <span>InterviewIQByTyagi</span>
             </div>
             <button id="back-to-landing" class="btn btn-ghost btn-sm">← Back</button>
         </nav>
@@ -572,5 +660,13 @@ A: I think my biggest weakness is probably time management..."></textarea>
     <script src="js/mock-interviewer.js"></script>
     <script src="js/mock-report.js"></script>
     <script src="app.js"></script>
+
+
+    <div class="watermark">
+    Created by Lakshay Tyagi
+</div>
+<footer class="creator-footer">
+    <h6>Built and Designed by Lakshay Tyagi</h6>
+</footer>
 </body>
 </html>
