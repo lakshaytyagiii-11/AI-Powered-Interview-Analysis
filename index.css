@@ -4,7 +4,7 @@
 
 /* --- CSS Custom Properties --- */
 :root {
-    --bg-primary: #060a13;
+    --bg-primary: #010725;
     --bg-surface: #0f1629;
     --bg-surface-elevated: #1a2340;
     --bg-surface-hover: #212d4a;
@@ -1036,4 +1036,39 @@ body {
     margin-top:6px;
     color:#a1a1aa;
     font-size:0.95rem;
+}
+.end-photo{
+    text-align:center;
+    margin-top:60px;
+    margin-bottom:40px;
+}
+
+.end-photo img{
+    width:140px;
+    height:140px;
+    border-radius:50%;
+    object-fit:cover;
+    border:4px solid #8b5cf6;
+    box-shadow:0 0 25px rgba(139,92,246,0.4);
+}
+
+.end-photo h3{
+    margin-top:15px;
+    color:white;
+    font-size:24px;
+}
+
+.creator-contact{
+    color:#f3f3f3;
+    margin-top:8px;
+    font-size:15px;
+}
+
+.creator-contact a{
+    color:#8b5cf6;
+    text-decoration:none;
+}
+
+.creator-contact a:hover{
+    text-decoration:underline;
 }
